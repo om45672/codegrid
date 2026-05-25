@@ -1,17 +1,10 @@
-"use client"
 import Image from "next/image";
-import {Button} from "@/components/ui/button"
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button"
 
 export default function Home() {
-  const handleclick = () => {
-    toast.success("Button clicked succesfully");
-  }
   return (
-    <div>
-      <Button onClick={()=>handleclick()}>
-        Click me
-      </Button>
+    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+     <Button>Hello world</Button> 
     </div>
   );
 }
