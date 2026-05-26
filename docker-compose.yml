@@ -1,0 +1,10 @@
+services:
+  codegrid-postgres:
+    image: postgres:17
+    container_name: codgrid_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: codegrid123
+      POSTGRES_DB: codegrid
+    ports:
+      - "5439:5432"
