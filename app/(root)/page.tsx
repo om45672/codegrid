@@ -1,6 +1,4 @@
-import Image from "next/image";
 import {Button} from "@/components/ui/button";
-import { UserButton } from "@clerk/nextjs";
 import { onBoardUser } from "@/modules/auth/actions";
 import { ChevronRight, Code2, Play, Star, Trophy, Users, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -259,7 +257,7 @@ export default async function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-r from-amber-600 to-amber-300  dark:from-amber-600 dark:to-indigo-600 rounded-md">
+      <section className="py-24 bg-linear-to-r from-amber-600 to-amber-300  dark:from-amber-600 dark:to-indigo-600 rounded-md">
         <div className="max-w-4xl mx-auto text-center px-4">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Ready to start your coding journey?
