@@ -33,24 +33,17 @@ export const problemSchema = z.object({
       output: z.string().min(1, "Output is required"),
       explanation: z.string().optional(),
     }),
-    CPP: z.object({
-      input: z.string().min(1, "Input is required"),
-      output: z.string().min(1, "Output is required"),
-      explanation: z.string().optional(),
-    }),
   }),
 
   codeSnippets: z.object({
     JAVASCRIPT: z.string().min(1, "Javascript code snippet is required"),
     PYTHON: z.string().min(1, "Python code snippet is required"),
     JAVA: z.string().min(1, "Java solution is required"),
-    CPP: z.string().min(1, "C++ solution is required"),
   }),
   referenceSolutions: z.object({
     JAVASCRIPT: z.string().min(1, "Javascript code snippet is required"),
     PYTHON: z.string().min(1, "Python code snippet is required"),
     JAVA: z.string().min(1, "Java solution is required"),
-    CPP: z.string().min(1, "C++ solution is required"),
   }),
 });
 
@@ -67,23 +60,20 @@ export const defaultFormValues = {
     JAVASCRIPT: { input: "", output: "", explanation: "" },
     PYTHON: { input: "", output: "", explanation: "" },
     JAVA: { input: "", output: "", explanation: "" },
-    CPP: { input: "", output: "", explanation: "" },
   },
   codeSnippets: {
     JAVASCRIPT: "function solution() {\n  // Write your code here\n}",
     PYTHON: "def solution():\n    # Write your code here\n    pass",
     JAVA: "public class Solution {\n    public static void main(String[] args) {\n        // Write your code here\n    }\n}",
-    CPP: "#include <bits/stdc++.h>\nusing namespace std;\n\nvoid solve() {\n    // Read input here\n    // int n;\n    // cin >> n;\n\n    // Write your code here\n\n    // cout << result << '\\n';\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(NULL);\n\n    solve();\n    return 0;\n}",
   },
   referenceSolutions: {
     JAVASCRIPT: "// Add your reference solution here",
     PYTHON: "# Add your reference solution here",
     JAVA: "// Add your reference solution here",
-    CPP: "// Add your reference solution here",
   },
 };
 
-export const LANGUAGES = ["JAVASCRIPT", "PYTHON", "JAVA", "CPP"];
+export const LANGUAGES = ["JAVASCRIPT", "PYTHON", "JAVA"];
 
 export const DIFFICULTY_OPTIONS = [
   { value: "EASY", label: "Easy", className: "bg-green-100 text-green-800" },

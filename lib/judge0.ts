@@ -1,56 +1,44 @@
 import axios from "axios";
 
-export type Judge0Submission = {
-  language_id: number;
-  source_code: string;
-  stdin: string;
-  expected_output: string;
-};
-
-export type Judge0BatchResponse = {
-  token: string;
-}[];
-
-export type Judge0Result = {
-  token: string;
-  status: {
-    id: number;
-    description?: string;
-  };
-  stdout?: string | null;
-  stderr?: string | null;
-  compile_output?: string | null;
-  [key: string]: unknown;
-};
-
-export function getJudege0languageId(language: string) {
+export function getJudge0languageId(language: string) {
   const languageMap = {
     PYTHON: 71,
     JAVASCRIPT: 63,
     JAVA: 62,
-    CPP: 54,
   };
+
   return languageMap[language.toUpperCase() as keyof typeof languageMap];
 }
 
-export async function submitBatch(submissions: Judge0Submission[]) {
+export function getLanguageName(languageId: number) {
+  const LANGUAGE_NAMES = {
+    63: "JavaScript",
+    71: "Python",
+    62: "Java",
+  };
+  return LANGUAGE_NAMES[languageId as keyof typeof LANGUAGE_NAMES] || "Unknown";
+}
+
+export async function submitBatch(submissions: any) {
   const options = {
     method: "POST",
-    url: "https://judge0-extra-ce1.p.rapidapi.com/submissions/batch",
+    url: `${process.env.JUDGE0_URL}/submissions/batch`,
     params: {
       base64_encoded: "false",
     },
     headers: {
-      "x-rapidapi-key": "71bc34cf72msh57e9f30deea75d2p1cf975jsn83461c7dbeeb",
-      "x-rapidapi-host": "judge0-extra-ce1.p.rapidapi.com",
+      "x-rapidapi-key": process.env.RAPIDAPI_KEY!,
+      "x-rapidapi-host": process.env.RAPIDAPI_HOST!,
       "Content-Type": "application/json",
     },
+
     data: {
       submissions: submissions,
     },
   };
 
-  const { data } = await axios.request<Judge0BatchResponse>(options);
+  const { data } = await axios.request(options);
+
   return data;
 }
 
@@ -58,29 +46,32 @@ export async function pollBatchResults(tokens: string[]) {
   while (true) {
     const options = {
       method: "GET",
-      url: "https://judge0-extra-ce1.p.rapidapi.com/submissions/batch",
+      url: `${process.env.JUDGE0_URL}/submissions/batch`,
       params: {
         tokens: tokens.join(","),
-        base64_encoded: "true",
+        base64_encoded: "false",
         fields: "*",
       },
       headers: {
-        "x-rapidapi-key": "71bc34cf72msh57e9f30deea75d2p1cf975jsn83461c7dbeeb",
-        "x-rapidapi-host": "judge0-extra-ce1.p.rapidapi.com",
+        "x-rapidapi-key": process.env.RAPIDAPI_KEY!,
+        "x-rapidapi-host": process.env.RAPIDAPI_HOST!,
         "Content-Type": "application/json",
       },
-      };
-      
-      const { data } = await axios.request<{ submissions: Judge0Result[] }>(options);
-      const results = data.submissions;
+    };
 
-      const isAlldone = results.every((result: Judge0Result) => result.status.id > 2);
+    const { data } = await axios.request(options);
 
-      if (isAlldone) {
-        return results;
-      }
-      await sleep(1000);
+    const results = data.submissions;
+
+    const isAllDone = results.every(
+      (r: any) => r.status.id !== 1 && r.status.id !== 2,
+    );
+
+    if (isAllDone) return results;
+
+    await sleep(1000);
   }
 }
 
-export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));

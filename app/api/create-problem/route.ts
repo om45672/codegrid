@@ -1,38 +1,26 @@
-import { currentUserRole, getCurrentUserData } from "@/modules/auth/actions";
-import { userRole as UserRole, Difficulty } from "@/lib/generated/prisma/enums";
-import { NextRequest, NextResponse } from "next/server";
-
-type JsonObject = { readonly [key: string]: JsonValue | null };
-type JsonArray = ReadonlyArray<JsonValue | null>;
-type JsonValue = string | number | boolean | JsonObject | JsonArray | { path: string[]; json: string };
+import { prisma } from "@/lib/db";
+import { UserRole } from "@/lib/generated/prisma/enums";
 import {
-  getJudege0languageId,
+  getJudge0languageId,
   pollBatchResults,
   submitBatch,
 } from "@/lib/judge0";
-import { prisma } from "@/lib/db";
+import { currentUserRole, getCurrentUserData } from "@/modules/auth/actions";
+
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const userRole = await currentUserRole();
     const user = await getCurrentUserData();
-    if (!user || "success" in user) {
-      return NextResponse.json({ error: "User not found" }, { status: 401 });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" });
     }
+
     if (userRole !== UserRole.ADMIN) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const body = await request.json() as {
-      title: string;
-      description: string;
-      difficulty: Difficulty;
-      tags: string[];
-      examples: JsonValue;
-      constraints: string;
-      testCases: Array<{ input: string; output: string }>;
-      codeSnippets: JsonValue;
-      referenceSolutions: Record<string, string>;
-    };
 
     const {
       title,
@@ -44,7 +32,7 @@ export async function POST(request: NextRequest) {
       testCases,
       codeSnippets,
       referenceSolutions,
-    } = body;
+    } = await request.json();
 
     if (
       !title ||
@@ -55,7 +43,7 @@ export async function POST(request: NextRequest) {
       !referenceSolutions
     ) {
       return NextResponse.json(
-        { message: "Missing required fields" },
+        { error: "Missing required fields" },
         { status: 400 },
       );
     }
@@ -68,44 +56,37 @@ export async function POST(request: NextRequest) {
     }
 
     for (const [language, solutionCode] of Object.entries(referenceSolutions)) {
-      if (!solutionCode) {
-        return NextResponse.json(
-          { error: "Invalid reference solution format" },
-          { status: 400 },
-        );
-      }
-      // 1. get judge0 language id for current lang
-      const languageId = getJudege0languageId(language);
-      // 2. prepare the judge0 submissions for all the testcases
+      // 1.get judge0 language id for current lang
+      const languageId = getJudge0languageId(language);
 
-      const submissions = testCases.map(
-        (testCase: { input: string; output: string }) => {
-          return {
-            language_id: languageId,
-            source_code: solutionCode,
-            stdin: testCase.input,
-            expected_output: testCase.output,
-          };
-        },
-      );
-      // 3. submit all testcases in one batch
-      const submissionResult = await submitBatch(submissions);
+      // 2. prepare judge0 submissions for all test cases
+
+      const submissions = testCases.map(({ input, output }) => ({
+        source_code: solutionCode,
+        language_id: languageId,
+        stdin: input,
+        expected_output: output,
+      }));
+      // 3. Submit all testcases in one batch
+
+      const submissionResults = await submitBatch(submissions);
       // 4. Extract tokens from response
-      const tokens = submissionResult.map(
-        (submission: { token: string }) => submission.token,
-      );
-      // 5. Poll judge0 until all submissions are processed
+      const tokens = submissionResults.map((res: any) => res.token);
+
+      // 5. Poll judge0 until all submissions are done
       const results = await pollBatchResults(tokens);
-      // 6. Validate that each test cases passed
+      // 6. validate that each test cases
+
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
+
         if (result.status.id !== 3) {
           return NextResponse.json(
             {
-              error: `Validation failed for language ${language} on test case ${i + 1}`,
+              error: `Validation failed for ${language}`,
               testCase: {
-                input: testCases[i].input,
-                expectedOutput: testCases[i].output,
+                input: submissions[i].stdin,
+                expectedOutput: submissions[i].expected_output,
                 actualOutput: result.stdout,
                 error: result.stderr || result.compile_output,
               },
@@ -116,25 +97,30 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+
     const newProblem = await prisma.problem.create({
       data: {
         title,
         description,
         difficulty,
         tags,
-        example: examples,
+        examples,
         constraints,
         testCases,
         codeSnippets,
         referenceSolutions,
+        //   @ts-expect-error id can be nullable in prisma schema but we are sure it won't be null here
         userId: user.id,
-      }
+      },
     });
-    return NextResponse.json({
-      success: true,
-      message: "Problem created successfully",
-      data: newProblem,
-    },{ status: 201 }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Problem Created Successfully",
+        data: newProblem,
+      },
+      { status: 201 },
     );
   } catch (error) {
     console.error("Database error:", error);

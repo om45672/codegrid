@@ -6,50 +6,72 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { defaultFormValues, problemSchema } from "@/modules/problems/schema";
-// import { SAMPLE_PROBLEMS } from "@/modules/problems/constant/sample-problem";
-import { z } from "zod";
 import { SAMPLE_PROBLEMS } from "@/modules/problems/constant/sample-problem";
+import { z } from "zod";
 
+type ProblemFormData = z.infer<typeof problemSchema>;
 
-export function useCreateProblem() { 
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
-    const [sampleType, setSampleType] = useState("DP");
+export function useCreateProblem() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [sampleType, setSampleType] = useState("DP");
 
-    const form = useForm({
-        resolver: zodResolver(problemSchema),
-        defaultValues: defaultFormValues
-    })
+  const form = useForm<ProblemFormData>({
+    resolver: zodResolver(problemSchema),
+    defaultValues: defaultFormValues as ProblemFormData,
+  });
 
-    const testCasesArray = useFieldArray({
-        control: form.control,
-        name: "testCases" as const,
-    });
+  const testCasesArray = useFieldArray({
+    control: form.control,
+    name: "testCases" as const,
+  });
 
-    const tagsArray = useFieldArray({
-        control: form.control,
-        name: "tags" as any,
-    });
+  const tagsArray = useFieldArray({
+    control: form.control,
+    name: "tags" as any,
+  }) as any;
 
-    const onSubmit = async (values: typeof defaultFormValues) => { };
-    
-    const loadSampleData = () => {
-        const sampleData = SAMPLE_PROBLEMS[sampleType as keyof typeof SAMPLE_PROBLEMS];
-        tagsArray.replace(sampleData.tags.map((tag: any) => tag));
-        testCasesArray.replace(sampleData.testCases.map((testCase: any) => testCase));
+  const onSubmit = async (values: ProblemFormData) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/create-problem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
 
-        form.reset(sampleData as any);
+      const data = await response.json();
+
+      console.log(data);
+      if (data.success) {
+        toast.success("Problem created successfully");
+        router.push("/problems");
+      }
+    } catch (error: any) {
+      console.error("Error creating problem:", error);
+      toast.error(error.message || "Failed to create problem");
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    return {
+  const loadSampleData = () => {
+    const sampleData =
+      SAMPLE_PROBLEMS[sampleType as keyof typeof SAMPLE_PROBLEMS];
+    tagsArray.replace(sampleData.tags);
+    testCasesArray.replace(sampleData.testCases);
+
+    form.reset(sampleData as any);
+  };
+
+  return {
     form,
     testCasesArray,
     tagsArray,
     isLoading,
     sampleType,
     setSampleType,
-    onSubmit: form.handleSubmit(onSubmit as any),
+    onSubmit: form.handleSubmit(onSubmit),
     loadSampleData,
   };
-
 }

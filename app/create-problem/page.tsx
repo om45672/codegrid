@@ -1,7 +1,7 @@
 
 import { ModeToggle } from '@/components/mode-toggle';
 import { Button } from '@/components/ui/button';
-import { userRole as UserRole } from '@/lib/generated/prisma/enums';
+import { UserRole } from '@/lib/generated/prisma/enums';
 import { getCurrentUserData } from '@/modules/auth/actions';
 import { CreateProblemForm } from '@/modules/problems/components/create-problem-form';
 import { ArrowLeft } from 'lucide-react';
