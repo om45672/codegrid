@@ -12,24 +12,50 @@ export const onBoardUser = async () => {
             }
         }
         const { id, emailAddresses, firstName, lastName, imageUrl } = user
-        await prisma.user.upsert({
+        const email = emailAddresses[0]?.emailAddress
+
+        if (!email) {
+            throw new Error("Authenticated user has no email address")
+        }
+
+        const existingUserByEmail = await prisma.user.findUnique({
             where: {
-                clerkId: id
-            },
-            update: {
-                firstName: firstName || null,
-                lastName: lastName || null,
-                imageUrl: imageUrl || null,
-                email: emailAddresses[0]?.emailAddress || ""
-            },
-            create: {
-                clerkId: id,
-                firstName: firstName || null,
-                lastName: lastName || null,
-                imageUrl: imageUrl || null,
-                email: emailAddresses[0]?.emailAddress || ""
+                email
             }
-        });
+        })
+
+        if (existingUserByEmail) {
+            await prisma.user.update({
+                where: {
+                    email
+                },
+                data: {
+                    clerkId: id,
+                    firstName: firstName || null,
+                    lastName: lastName || null,
+                    imageUrl: imageUrl || null
+                }
+            })
+        } else {
+            await prisma.user.upsert({
+                where: {
+                    clerkId: id
+                },
+                update: {
+                    firstName: firstName || null,
+                    lastName: lastName || null,
+                    imageUrl: imageUrl || null,
+                    email
+                },
+                create: {
+                    clerkId: id,
+                    firstName: firstName || null,
+                    lastName: lastName || null,
+                    imageUrl: imageUrl || null,
+                    email
+                }
+            })
+        }
     } catch (error) {
         console.error("Error onboarding user:", error)
         throw new Error("Failed to onboard user")
