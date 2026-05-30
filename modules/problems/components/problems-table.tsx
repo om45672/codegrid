@@ -41,11 +41,11 @@ const ProblemsTable = ({ problems = [], user }: any) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">Solved</TableHead>
+                <TableHead className="w-25">Solved</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Tags</TableHead>
-                <TableHead className="w-[120px]">Difficulty</TableHead>
-                <TableHead className="w-[200px]">Actions</TableHead>
+                <TableHead className="w-30">Difficulty</TableHead>
+                <TableHead className="w-50">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
