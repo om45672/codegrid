@@ -9,23 +9,30 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { ProblemsHeader } from "./problems-header";
-import { useProblemFilters } from "../hooks/use-problem-fiters";
 import { ProblemsFilters } from "./problem-filters";
 import { usePagination } from "../hooks/use-pagination";
 import { ProblemRow } from "./problem-row";
 import { ProblemsEmpty } from "./problem-empty";
 import { ProblemsPagination } from "./problems-pagination";
+import { useProblemFilters } from "../hooks/use-problem-fiters";
+import { usePlaylistActions } from "@/modules/playlist/hooks/use-playlist-action";
+import CreatePlaylistModal from "@/modules/playlist/components/create-playlist";
+import AddToPlaylistModal from "@/modules/playlist/components/add-to-playlist";
 
-const ProblemsTable = ({ problems = [], user }: any) => {
+const ProblemsTable = ({problems=[] , user}:any) => {
 
   const filters = useProblemFilters(problems);
-  const pagination = usePagination(filters.filteredProblems, 10);
+  const pagination = usePagination(filters.filteredProblems);
+  const playlist = usePlaylistActions();
+
+  console.log("Filtered Problems:", filters.filteredProblems);
+  console.log("Current Page Problems:", pagination.paginatedItems);
 
   return (
-    <div className="w-full mx-w-7xl mx-auto space-y-8 p-8">
-      <ProblemsHeader onCreatePlaylist={() => { }} />
+    <div className="w-full max-w-7xl mx-auto space-y-8 p-6">
+      <ProblemsHeader onCreatePlaylist={playlist.openCreateModal}/>
 
-      <ProblemsFilters
+        <ProblemsFilters
         search={filters.search}
         onSearchChange={filters.setSearch}
         difficulty={filters.difficulty}
@@ -33,19 +40,19 @@ const ProblemsTable = ({ problems = [], user }: any) => {
         selectedTag={filters.selectedTag}
         onTagChange={filters.setSelectedTag}
         allTags={filters.allTags}
+        
+        />
 
-      />
-
-      <Card>
-        <CardContent>
-          <Table>
+        <Card>
+          <CardContent>
+             <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-25">Solved</TableHead>
+                <TableHead className="w-[100px]">Solved</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Tags</TableHead>
-                <TableHead className="w-30">Difficulty</TableHead>
-                <TableHead className="w-50">Actions</TableHead>
+                <TableHead className="w-[120px]">Difficulty</TableHead>
+                <TableHead className="w-[200px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -55,8 +62,8 @@ const ProblemsTable = ({ problems = [], user }: any) => {
                     key={problem.id}
                     problem={problem}
                     user={user}
-                    onDelete={() => { }}
-                    onSave={() => { }}
+                    onDelete={()=>{}}
+                    onSave={playlist.openAddToPlaylist}
                   />
                 ))
               ) : (
@@ -64,10 +71,10 @@ const ProblemsTable = ({ problems = [], user }: any) => {
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Pagination */}
+        {/* Pagination */}
       {pagination.showPagination && (
         <ProblemsPagination
           currentPage={pagination.currentPage}
@@ -79,6 +86,21 @@ const ProblemsTable = ({ problems = [], user }: any) => {
           onNext={pagination.goToNextPage}
         />
       )}
+
+      <CreatePlaylistModal
+      isOpen={playlist.isCreateModalOpen}
+      onClose={playlist.closeCreateModal}
+      onSubmit={playlist.handleCreatePlaylist}
+      />
+
+      <AddToPlaylistModal
+      isOpen={playlist.isAddToPlaylistModalOpen}
+      onClose={playlist.closeAddToPlaylistModal}
+      onSubmit={playlist.handleAddToPlaylist}
+      problemId={playlist.selectedProblemId}
+      
+      />
+
     </div>
   )
 }

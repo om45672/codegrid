@@ -13,7 +13,7 @@ export function ProblemsHeader({ onCreatePlaylist }:any) {
           Manage and solve coding problems
         </p>
       </div>
-      <Button onClick={onCreatePlaylist} className="gap-2">
+      <Button onClick={onCreatePlaylist} className="gap-2 hover:cursor-pointer">
         <Plus className="h-4 w-4" />
         Create Playlist
       </Button>
