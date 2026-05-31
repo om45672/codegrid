@@ -18,7 +18,7 @@ export function useEditor(problem: any, initialLanguage = "JAVASCRIPT") {
   }, [selectedLanguage, problem]);
 
   const handleRun = () => {
-    toast.success("Not Created Yet");
+    toast.success("Currently in development");
   };
 
   const handleSubmit = async () => {
