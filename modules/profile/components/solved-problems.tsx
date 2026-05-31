@@ -1,12 +1,12 @@
-import React from 'react';
 import { Trophy, CheckCircle, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import type { ProfileSolvedProblem } from '@/modules/problems/types';
 
 
-const SolvedProblems = ({ solvedProblems }) => {
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+const SolvedProblems = ({ solvedProblems }: { solvedProblems: ProfileSolvedProblem[] }) => {
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

@@ -1,6 +1,14 @@
 'use client';
 
-export function ExampleSection({ example , index }:any) {
+import type { ProblemExample } from "../types";
+
+export function ExampleSection({
+  example,
+  index,
+}: {
+  example: ProblemExample;
+  index: number;
+}) {
   if (!example) return null;
 
   return (

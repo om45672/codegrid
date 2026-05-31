@@ -1,24 +1,42 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { defaultFormValues, problemSchema } from "@/modules/problems/schema";
-import { SAMPLE_PROBLEMS } from "@/modules/problems/constant/sample-problem";
-import { z } from "zod";
+import {
+  defaultFormValues,
+  problemSchema,
+  type ProblemFormData,
+} from "@/modules/problems/schema";
+import {
+  SAMPLE_PROBLEMS,
+  type SampleProblemType,
+} from "@/modules/problems/constant/sample-problem";
 
-type ProblemFormData = z.infer<typeof problemSchema>;
+export type TagsArrayControls = {
+  fields: Array<{ id: string; value: string }>;
+  append: (value: string) => void;
+  remove: (index: number) => void;
+  replace: (values: string[]) => void;
+};
+
+type CreateProblemResponse =
+  | { success: true }
+  | { success?: false; error?: string };
+
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
 
 export function useCreateProblem() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [sampleType, setSampleType] = useState("DP");
+  const [sampleType, setSampleType] = useState<SampleProblemType>("DP");
 
   const form = useForm<ProblemFormData>({
     resolver: zodResolver(problemSchema),
-    defaultValues: defaultFormValues as ProblemFormData,
+    defaultValues: defaultFormValues,
   });
 
   const testCasesArray = useFieldArray({
@@ -26,10 +44,23 @@ export function useCreateProblem() {
     name: "testCases" as const,
   });
 
-  const tagsArray = useFieldArray({
+  const tags = useWatch({
     control: form.control,
-    name: "tags" as any,
-  }) as any;
+    name: "tags",
+  }) ?? [];
+  const updateTags = (nextTags: string[]) => {
+    form.setValue("tags", nextTags.length ? nextTags : [""], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
+  const tagsArray: TagsArrayControls = {
+    fields: tags.map((value, index) => ({ id: `tag-${index}`, value })),
+    append: (value) => updateTags([...tags, value]),
+    remove: (index) => updateTags(tags.filter((_, i) => i !== index)),
+    replace: updateTags,
+  };
 
   const onSubmit = async (values: ProblemFormData) => {
     try {
@@ -40,28 +71,28 @@ export function useCreateProblem() {
         body: JSON.stringify(values),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as CreateProblemResponse;
 
-      console.log(data);
       if (data.success) {
         toast.success("Problem created successfully");
         router.push("/problems");
+      } else {
+        toast.error(data.error ?? "Failed to create problem");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error creating problem:", error);
-      toast.error(error.message || "Failed to create problem");
+      toast.error(getErrorMessage(error, "Failed to create problem"));
     } finally {
       setIsLoading(false);
     }
   };
 
   const loadSampleData = () => {
-    const sampleData =
-      SAMPLE_PROBLEMS[sampleType as keyof typeof SAMPLE_PROBLEMS];
+    const sampleData = SAMPLE_PROBLEMS[sampleType];
     tagsArray.replace(sampleData.tags);
     testCasesArray.replace(sampleData.testCases);
 
-    form.reset(sampleData as any);
+    form.reset(sampleData);
   };
 
   return {

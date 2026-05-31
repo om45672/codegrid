@@ -2,6 +2,20 @@
 
 import { Button } from "@/components/ui/button";
 
+type ProblemsPaginationProps = {
+  currentPage: number;
+  totalPages: number;
+  displayRange: {
+    start: number;
+    end: number;
+    total: number;
+  };
+  canGoPrevious: boolean;
+  canGoNext: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+};
+
 /**
  * Pagination controls with previous/next buttons and page info
  */
@@ -13,7 +27,7 @@ export function ProblemsPagination({
   canGoNext,
   onPrevious,
   onNext,
-}:any) {
+}: ProblemsPaginationProps) {
   return (
     <div className="flex items-center justify-between">
       {/* Results count */}

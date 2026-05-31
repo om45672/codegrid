@@ -1,9 +1,14 @@
 "use client";
 import { SubmissionDetails } from "./submission-details";
 import { TestCaseTable } from "./testcase-table";
+import type { ExecuteCodeResult } from "../types";
 
-export function ExecutionResults({executionResponse}:any){
-      if (!executionResponse?.submission) {
+export function ExecutionResults({
+  executionResponse,
+}: {
+  executionResponse: ExecuteCodeResult | null;
+}){
+      if (!executionResponse?.success) {
     return null;
   }
 

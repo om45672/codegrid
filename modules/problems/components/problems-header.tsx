@@ -3,8 +3,11 @@
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-
-export function ProblemsHeader({ onCreatePlaylist }:any) {
+export function ProblemsHeader({
+  onCreatePlaylist,
+}: {
+  onCreatePlaylist: () => void;
+}) {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>

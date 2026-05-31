@@ -4,8 +4,11 @@ import {
   getJudge0languageId,
   pollBatchResults,
   submitBatch,
+  type Judge0Submission,
 } from "@/lib/judge0";
 import { currentUserRole, getCurrentUserData } from "@/modules/auth/actions";
+import { problemSchema } from "@/modules/problems/schema";
+import type { LanguageKey } from "@/modules/problems/types";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -22,6 +25,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const parseResult = problemSchema.safeParse(await request.json());
+
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: "Invalid problem data", details: parseResult.error.flatten() },
+        { status: 400 },
+      );
+    }
+
     const {
       title,
       description,
@@ -32,36 +44,24 @@ export async function POST(request: NextRequest) {
       testCases,
       codeSnippets,
       referenceSolutions,
-    } = await request.json();
+    } = parseResult.data;
 
-    if (
-      !title ||
-      !description ||
-      !difficulty ||
-      !testCases ||
-      !codeSnippets ||
-      !referenceSolutions
-    ) {
+    if (!difficulty) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Difficulty is required" },
         { status: 400 },
       );
     }
 
-    if (!Array.isArray(testCases) || testCases.length === 0) {
-      return NextResponse.json(
-        { error: "At least one test case is required" },
-        { status: 400 },
-      );
-    }
-
-    for (const [language, solutionCode] of Object.entries(referenceSolutions)) {
+    for (const [language, solutionCode] of Object.entries(
+      referenceSolutions,
+    ) as Array<[LanguageKey, string]>) {
       // 1.get judge0 language id for current lang
       const languageId = getJudge0languageId(language);
 
       // 2. prepare judge0 submissions for all test cases
 
-      const submissions = testCases.map(({ input, output }) => ({
+      const submissions: Judge0Submission[] = testCases.map(({ input, output }) => ({
         source_code: solutionCode,
         language_id: languageId,
         stdin: input,
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
       const submissionResults = await submitBatch(submissions);
       // 4. Extract tokens from response
-      const tokens = submissionResults.map((res: any) => res.token);
+      const tokens = submissionResults.map((res) => res.token);
 
       // 5. Poll judge0 until all submissions are done
       const results = await pollBatchResults(tokens);
@@ -109,7 +109,6 @@ export async function POST(request: NextRequest) {
         testCases,
         codeSnippets,
         referenceSolutions,
-        //   @ts-expect-error id can be nullable in prisma schema but we are sure it won't be null here
         userId: user.id,
       },
     });

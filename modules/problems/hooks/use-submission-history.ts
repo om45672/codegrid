@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { getAllSubmissionByCurrentUserForProblem } from "../actions";
+import type { ProfileSubmission } from "../types";
 
 export function useSubmissionHistory(id:string){
-     const [submissionHistory, setSubmissionHistory] = useState([]);
+     const [submissionHistory, setSubmissionHistory] = useState<ProfileSubmission[]>([]);
 
 
      useEffect(()=>{

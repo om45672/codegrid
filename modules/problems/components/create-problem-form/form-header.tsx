@@ -2,8 +2,16 @@
 import { FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
+import type { Dispatch, SetStateAction } from "react";
+import type { SampleProblemType } from "../../constant/sample-problem";
 
-export function FormHeader({ sampleType, setSampleType, onLoadSample }: any) {
+type FormHeaderProps = {
+  sampleType: SampleProblemType;
+  setSampleType: Dispatch<SetStateAction<SampleProblemType>>;
+  onLoadSample: () => void;
+};
+
+export function FormHeader({ sampleType, setSampleType, onLoadSample }: FormHeaderProps) {
   return (
     <CardHeader className="pb-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -33,7 +41,10 @@ export function FormHeader({ sampleType, setSampleType, onLoadSample }: any) {
   );
 }
 
-function SampleTypeToggle({ sampleType, setSampleType }: any) {
+function SampleTypeToggle({
+  sampleType,
+  setSampleType,
+}: Pick<FormHeaderProps, "sampleType" | "setSampleType">) {
   return (
     <div className="flex border rounded-md">
       <Button

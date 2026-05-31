@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { LanguageKey } from "../types";
 
 export const problemSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -47,7 +48,9 @@ export const problemSchema = z.object({
   }),
 });
 
-export const defaultFormValues = {
+export type ProblemFormData = z.infer<typeof problemSchema>;
+
+export const defaultFormValues: ProblemFormData = {
   title: "",
   description: "",
   difficulty: undefined,
@@ -73,7 +76,7 @@ export const defaultFormValues = {
   },
 };
 
-export const LANGUAGES = ["JAVASCRIPT", "PYTHON", "JAVA"];
+export const LANGUAGES = ["JAVASCRIPT", "PYTHON", "JAVA"] as const satisfies readonly LanguageKey[];
 
 export const DIFFICULTY_OPTIONS = [
   { value: "EASY", label: "Easy", className: "bg-green-100 text-green-800" },

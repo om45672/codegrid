@@ -10,19 +10,35 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Check } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import type { PlaylistListItem } from "@/modules/problems/types";
 
+type AddToPlaylistModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (problemId: string, playlistId: string) => Promise<boolean>;
+  problemId: string | null;
+};
 
-const AddToPlaylistModal = ({isOpen , onClose , onSubmit , problemId}:any)=>{
-     const [playlists, setPlaylists] = useState([]);
+type PlaylistsResponse =
+  | { success: true; playlists: PlaylistListItem[] }
+  | { success: false; error: string };
+
+const AddToPlaylistModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  problemId,
+}: AddToPlaylistModalProps)=>{
+     const [playlists, setPlaylists] = useState<PlaylistListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(()=>{
     const loadPlaylist = async()=>{
         try {
             const response = await fetch("/api/playlist");
-            const data = await response.json();
+            const data = (await response.json()) as PlaylistsResponse;
 
             if(data.success){
                  setPlaylists(data.playlists);
@@ -42,6 +58,11 @@ const AddToPlaylistModal = ({isOpen , onClose , onSubmit , problemId}:any)=>{
   },[isOpen])
 
   const handleAddToPlaylist = async(playlistId:string)=>{
+    if (!problemId) {
+      toast.error("No problem selected");
+      return;
+    }
+
     try {
         setIsLoading(true);
         await onSubmit(problemId , playlistId)
@@ -56,7 +77,7 @@ const AddToPlaylistModal = ({isOpen , onClose , onSubmit , problemId}:any)=>{
   }
 
   return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add to Playlist</DialogTitle>

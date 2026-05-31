@@ -7,11 +7,20 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { getDifficultyColor } from "../constant";
+import type { CurrentUserData, ProblemWithSolvedBy } from "../types";
+import type { Difficulty } from "@/lib/generated/prisma/enums";
+
+type ProblemRowProps = {
+  problem: ProblemWithSolvedBy;
+  user: CurrentUserData | null;
+  onDelete: (problemId: string) => void;
+  onSave: (problemId: string) => void;
+};
 
 /**
  * Single row in the problems table
  */
-export function ProblemRow({ problem, user, onDelete, onSave }) {
+export function ProblemRow({ problem, user, onDelete, onSave }: ProblemRowProps) {
   const isSolved = problem.solvedBy?.length > 0;
 
   return (
@@ -52,7 +61,7 @@ export function ProblemRow({ problem, user, onDelete, onSave }) {
 /**
  * Checkbox showing if problem is solved
  */
-function SolvedCheckbox({ checked }) {
+function SolvedCheckbox({ checked }: { checked: boolean }) {
   return (
     <Checkbox
       checked={checked}
@@ -65,7 +74,7 @@ function SolvedCheckbox({ checked }) {
 /**
  * Problem title with link to problem page
  */
-function ProblemTitle({ id, title }) {
+function ProblemTitle({ id, title }: { id: string; title: string }) {
   return (
     <Link
       href={`/problem/${id}`}
@@ -79,7 +88,7 @@ function ProblemTitle({ id, title }) {
 /**
  * List of tag badges
  */
-function TagsList({ tags = [] }) {
+function TagsList({ tags = [] }: { tags?: string[] }) {
   return (
     <div className="flex flex-wrap gap-1">
       {tags.map((tag, idx) => (
@@ -98,7 +107,7 @@ function TagsList({ tags = [] }) {
 /**
  * Difficulty badge with color
  */
-function DifficultyBadge({ difficulty }) {
+function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
   return (
     <Badge className={`${getDifficultyColor(difficulty)} border-0 font-medium`}>
       {difficulty}
@@ -109,7 +118,17 @@ function DifficultyBadge({ difficulty }) {
 /**
  * Action buttons (delete, edit, save to playlist)
  */
-function ActionButtons({ problemId, isAdmin, onDelete, onSave }) {
+function ActionButtons({
+  problemId,
+  isAdmin,
+  onDelete,
+  onSave,
+}: {
+  problemId: string;
+  isAdmin: boolean;
+  onDelete: (problemId: string) => void;
+  onSave: (problemId: string) => void;
+}) {
   return (
     <div className="flex items-center gap-2">
       {isAdmin && (

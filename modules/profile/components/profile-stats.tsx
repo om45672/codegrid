@@ -1,10 +1,16 @@
-import React from 'react';
 import { BarChart3, Target, Clock, Award } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import type { ProfileSubmission } from '@/modules/problems/types';
 
 
 
-const ProfileStats = ({ submissions, solvedCount, playlistCount }) => {
+type ProfileStatsProps = {
+  submissions: ProfileSubmission[];
+  solvedCount: number;
+  playlistCount: number;
+};
+
+const ProfileStats = ({ submissions, solvedCount, playlistCount }: ProfileStatsProps) => {
   const acceptedSubmissions = submissions.filter(s => s.status === 'Accepted').length;
 
   const successRate = submissions.length > 0 ? Math.round((acceptedSubmissions / submissions.length) * 100) : 0;

@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { toast } from "sonner";
 import { ProblemsHeader } from "./problems-header";
 import { ProblemsFilters } from "./problem-filters";
 import { usePagination } from "../hooks/use-pagination";
@@ -18,16 +17,18 @@ import { useProblemFilters } from "../hooks/use-problem-fiters";
 import { usePlaylistActions } from "@/modules/playlist/hooks/use-playlist-action";
 import CreatePlaylistModal from "@/modules/playlist/components/create-playlist";
 import AddToPlaylistModal from "@/modules/playlist/components/add-to-playlist";
+import type { CurrentUserData, ProblemWithSolvedBy } from "../types";
 
-const ProblemsTable = ({problems=[] , user}:any) => {
+type ProblemsTableProps = {
+  problems?: ProblemWithSolvedBy[];
+  user: CurrentUserData | null;
+};
+
+const ProblemsTable = ({problems=[] , user}: ProblemsTableProps) => {
 
   const filters = useProblemFilters(problems);
   const pagination = usePagination(filters.filteredProblems);
   const playlist = usePlaylistActions();
-
-  console.log("Filtered Problems:", filters.filteredProblems);
-  console.log("Current Page Problems:", pagination.paginatedItems);
-
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8 p-6">
       <ProblemsHeader onCreatePlaylist={playlist.openCreateModal}/>
@@ -62,7 +63,7 @@ const ProblemsTable = ({problems=[] , user}:any) => {
                     key={problem.id}
                     problem={problem}
                     user={user}
-                    onDelete={()=>{}}
+                    onDelete={() => {}}
                     onSave={playlist.openAddToPlaylist}
                   />
                 ))

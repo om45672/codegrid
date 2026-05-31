@@ -1,8 +1,13 @@
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle } from "lucide-react";
+import type { SubmissionTestCaseResult } from "../types";
 
-export const TestCaseTable = ({ testCases }:any) => {
+export const TestCaseTable = ({
+  testCases,
+}: {
+  testCases: SubmissionTestCaseResult[];
+}) => {
   return (
     <div className="w-full rounded-lg border">
       <Table>

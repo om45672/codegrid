@@ -12,6 +12,7 @@ import React from "react";
 import { EDITOR_OPTIONS, getEditorLanguage, LANGUAGE_OPTIONS } from "../constant";
 import { Editor } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
+import type { LanguageKey } from "../types";
 
 const CodeEditorPanel = ({
   code,
@@ -22,7 +23,16 @@ const CodeEditorPanel = ({
   onSubmit,
   isRunning,
   isSubmitting,
-}: any) => {
+}: {
+  code: string;
+  onCodeChange: (value: string) => void;
+  selectedLanguage: LanguageKey;
+  onLanguageChange: (value: LanguageKey) => void;
+  onRun: () => void;
+  onSubmit: () => void;
+  isRunning: boolean;
+  isSubmitting: boolean;
+}) => {
   const { theme } = useTheme();
 
   return (
@@ -33,7 +43,10 @@ const CodeEditorPanel = ({
             <Code className="size-5" />
             Code Editor
           </CardTitle>
-          <Select value={selectedLanguage} onValueChange={onLanguageChange}>
+          <Select
+            value={selectedLanguage}
+            onValueChange={(value) => onLanguageChange(value as LanguageKey)}
+          >
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -54,10 +67,8 @@ const CodeEditorPanel = ({
             height={"400px"}
             language={getEditorLanguage(selectedLanguage)}
             value={code}
-            // @ts-expect-error fix
-            onChange={(value:string)=>onCodeChange(value || "")}
+            onChange={(value)=>onCodeChange(value ?? "")}
             theme={theme === "dark" ? "vs-dark":"light"}
-            // @ts-expect-error fix
             options={EDITOR_OPTIONS}
             />
         </div>

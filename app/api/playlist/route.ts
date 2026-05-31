@@ -2,7 +2,12 @@ import { prisma } from "@/lib/db";
 import { getCurrentUserData } from "@/modules/auth/actions";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+type CreatePlaylistRequest = {
+  name?: string;
+  description?: string;
+};
+
+export async function GET() {
   try {
     const user = await getCurrentUserData();
 
@@ -15,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     // Get user's playlists
     const playlists = await prisma.playlist.findMany({
-      where: { userId: user?.id },
+      where: { userId: user.id },
       include: {
         problems: {
           include: {
@@ -56,9 +61,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, description } = await request.json();
+    const { name, description } = (await request.json()) as CreatePlaylistRequest;
 
-    if (!name) {
+    if (!name?.trim()) {
       return NextResponse.json(
         { success: false, error: "Name is required" },
         { status: 400 },
@@ -68,9 +73,9 @@ export async function POST(request: NextRequest) {
     // Create new playlist
     const playlist = await prisma.playlist.create({
       data: {
-        name,
+        name: name.trim(),
         description,
-        userId: user?.id,
+        userId: user.id,
       },
     });
 

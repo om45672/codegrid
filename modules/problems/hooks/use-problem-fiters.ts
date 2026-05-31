@@ -1,14 +1,22 @@
 import { useState , useMemo } from "react";
+import type { DifficultyFilter } from "../types";
 
-export function useProblemFilters(problems=[]){
-    console.log("useProblemFilters called with problems:", problems);
+type FilterableProblem = {
+  title: string;
+  difficulty: string;
+  tags: string[];
+};
+
+export function useProblemFilters<TProblem extends FilterableProblem>(
+  problems: TProblem[] = [],
+){
       const [search, setSearch] = useState("");
-  const [difficulty, setDifficulty] = useState("ALL");
+  const [difficulty, setDifficulty] = useState<DifficultyFilter>("ALL");
   const [selectedTag, setSelectedTag] = useState("ALL");
 
 //   Extract all unique tags from the problems
 const allTags = useMemo(()=>{
-    const tagsSet = new Set();
+    const tagsSet = new Set<string>();
     problems.forEach((p)=>p.tags?.forEach((t)=>tagsSet.add(t)));
 
     return Array.from(tagsSet)
@@ -26,8 +34,6 @@ const allTags = useMemo(()=>{
         selectedTag === "ALL" ? true : problem.tags?.includes(selectedTag)
       );
   }, [problems, search, difficulty, selectedTag]);
-
-console.log("Filtered Problems in useProblemFilters:", filteredProblems);
 
 return {
     search,

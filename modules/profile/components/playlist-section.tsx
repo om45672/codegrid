@@ -1,13 +1,13 @@
-import React from 'react';
 import { List, Calendar, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import type { Playlist } from '@/lib/generated/prisma/client';
 
 
 
-const PlaylistsSection = ({ playlists }) => {
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+const PlaylistsSection = ({ playlists }: { playlists: Playlist[] }) => {
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -62,7 +62,8 @@ const PlaylistsSection = ({ playlists }) => {
                   <Calendar className="w-3 h-3" />
                   <span>Created {formatDate(playlist.createdAt)}</span>
                 </div>
-                {playlist.createdAt !== playlist.updatedAt && (
+                {new Date(playlist.createdAt).getTime() !==
+                  new Date(playlist.updatedAt).getTime() && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Calendar className="w-3 h-3" />
                     <span>Updated {formatDate(playlist.updatedAt)}</span>

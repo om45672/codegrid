@@ -1,13 +1,49 @@
 import axios from "axios";
+import type { LanguageKey } from "@/modules/problems/types";
 
-export function getJudge0languageId(language: string) {
+export type Judge0LanguageId = 63 | 71 | 62;
+
+export type Judge0Submission = {
+  source_code: string;
+  language_id: Judge0LanguageId;
+  stdin: string;
+  expected_output?: string;
+  base64_encoded?: boolean;
+  wait?: boolean;
+};
+
+export type Judge0SubmissionToken = {
+  token: string;
+};
+
+export type Judge0Result = {
+  stdout: string | null;
+  stderr: string | null;
+  compile_output: string | null;
+  status: {
+    id: number;
+    description: string;
+  };
+  memory: string | number | null;
+  time: string | number | null;
+};
+
+type Judge0BatchResponse<T> = T[] | { submissions: T[] };
+
+export function getJudge0languageId(language: LanguageKey | string): Judge0LanguageId {
   const languageMap = {
     PYTHON: 71,
     JAVASCRIPT: 63,
     JAVA: 62,
-  };
+  } satisfies Record<LanguageKey, Judge0LanguageId>;
 
-  return languageMap[language.toUpperCase() as keyof typeof languageMap];
+  const languageId = languageMap[language.toUpperCase() as LanguageKey];
+
+  if (!languageId) {
+    throw new Error(`Unsupported language: ${language}`);
+  }
+
+  return languageId;
 }
 
 export function getLanguageName(languageId: number) {
@@ -19,7 +55,12 @@ export function getLanguageName(languageId: number) {
   return LANGUAGE_NAMES[languageId as keyof typeof LANGUAGE_NAMES] || "Unknown";
 }
 
-export async function submitBatch(submissions: any) {
+const unwrapBatchResponse = <T>(data: Judge0BatchResponse<T>): T[] =>
+  Array.isArray(data) ? data : data.submissions;
+
+export async function submitBatch(
+  submissions: Judge0Submission[],
+): Promise<Judge0SubmissionToken[]> {
   const options = {
     method: "POST",
     url: `${process.env.JUDGE0_URL}/submissions/batch`,
@@ -37,12 +78,13 @@ export async function submitBatch(submissions: any) {
     },
   };
 
-  const { data } = await axios.request(options);
+  const { data } =
+    await axios.request<Judge0BatchResponse<Judge0SubmissionToken>>(options);
 
-  return data;
+  return unwrapBatchResponse(data);
 }
 
-export async function pollBatchResults(tokens: string[]) {
+export async function pollBatchResults(tokens: string[]): Promise<Judge0Result[]> {
   while (true) {
     const options = {
       method: "GET",
@@ -59,12 +101,13 @@ export async function pollBatchResults(tokens: string[]) {
       },
     };
 
-    const { data } = await axios.request(options);
+    const { data } =
+      await axios.request<Judge0BatchResponse<Judge0Result>>(options);
 
-    const results = data.submissions;
+    const results = unwrapBatchResponse(data);
 
     const isAllDone = results.every(
-      (r: any) => r.status.id !== 1 && r.status.id !== 2,
+      (result) => result.status.id !== 1 && result.status.id !== 2,
     );
 
     if (isAllDone) return results;
@@ -74,4 +117,4 @@ export async function pollBatchResults(tokens: string[]) {
 }
 
 export const sleep = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+  new Promise<void>((resolve) => setTimeout(resolve, ms));

@@ -1,3 +1,5 @@
+import type { ProblemFormData } from "../schema";
+
 export const sampleDPProblem = {
   title: "Climbing Stairs",
   description:
@@ -156,7 +158,7 @@ class Main {
   }
 }`,
   },
-};
+} satisfies ProblemFormData;
 
 export const sampleStringProblem = {
   title: "Valid Palindrome",
@@ -347,9 +349,11 @@ public class Main {
 }
 `,
   },
-};
+} satisfies ProblemFormData;
 
 export const SAMPLE_PROBLEMS = {
   DP: sampleDPProblem,
   string: sampleStringProblem,
-};
+} satisfies Record<string, ProblemFormData>;
+
+export type SampleProblemType = keyof typeof SAMPLE_PROBLEMS;

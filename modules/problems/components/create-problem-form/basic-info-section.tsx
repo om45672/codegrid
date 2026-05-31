@@ -14,11 +14,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { DIFFICULTY_OPTIONS } from "../../schema";
 
-import { UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { problemSchema } from "@/modules/problems/schema";
-
-type ProblemFormData = z.infer<typeof problemSchema>;
+import type {
+  Control,
+  FieldError,
+  UseFormRegister,
+  UseFormReturn,
+} from "react-hook-form";
+import type { ProblemFormData } from "@/modules/problems/schema";
 
 interface BasicInfoSectionProps {
   form: UseFormReturn<ProblemFormData>;
@@ -41,13 +43,13 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
 }
 
 interface FieldProps {
-  register: any;
-  error?: any;
+  register: UseFormRegister<ProblemFormData>;
+  error?: FieldError;
 }
 
 interface DifficultyFieldProps {
-  control: any;
-  error?: any;
+  control: Control<ProblemFormData>;
+  error?: FieldError;
 }
 
 function TitleField({ register, error }: FieldProps) {

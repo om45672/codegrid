@@ -1,47 +1,60 @@
 "use client";
+
 import { getJudge0languageId } from "@/lib/judge0";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { executeCode } from "../actions";
+import type { ExecuteCodeResult, LanguageKey, ProblemData } from "../types";
 
-export function useEditor(problem: any, initialLanguage = "JAVASCRIPT") {
-  const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage);
-  const [code, setCode] = useState("");
+export function useEditor(
+  problem: ProblemData,
+  initialLanguage: LanguageKey = "JAVASCRIPT",
+) {
+  const [selectedLanguage, setSelectedLanguageState] =
+    useState<LanguageKey>(initialLanguage);
+  const [code, setCode] = useState(problem.codeSnippets[initialLanguage] ?? "");
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [executionResponse, setExecutionResponse] = useState(null);
+  const [executionResponse, setExecutionResponse] =
+    useState<ExecuteCodeResult | null>(null);
 
-  useEffect(() => {
-    if (problem?.codeSnippets?.[selectedLanguage]) {
-      setCode(problem?.codeSnippets?.[selectedLanguage]);
-    }
-  }, [selectedLanguage, problem]);
+  const setSelectedLanguage = (language: LanguageKey) => {
+    setSelectedLanguageState(language);
+    setCode(problem.codeSnippets[language] ?? "");
+  };
 
   const handleRun = () => {
     toast.success("Currently in development");
   };
 
   const handleSubmit = async () => {
-    if (!problem) return;
-
     try {
       setIsRunning(true);
-      const language_id = getJudge0languageId(selectedLanguage);
+      setIsSubmitting(true);
+      const languageId = getJudge0languageId(selectedLanguage);
       const stdin = problem.testCases.map((tc) => tc.input);
-      const expected_outputs = problem.testCases.map((tc) => tc.output);
+      const expectedOutputs = problem.testCases.map((tc) => tc.output);
 
-      const res = await executeCode(code , language_id , stdin , expected_outputs , problem.id);
+      const res = await executeCode(
+        code,
+        languageId,
+        stdin,
+        expectedOutputs,
+        problem.id,
+      );
       setExecutionResponse(res);
 
-      if(res.success){
-        toast.success("Code executed successfully")
+      if (res.success) {
+        toast.success("Code executed successfully");
+      } else {
+        toast.error(res.error);
       }
     } catch (error) {
-       console.error('Error executing code', error);
-      toast.error('Error executing code');
-    }
-    finally{
-      setIsRunning(false)
+      console.error("Error executing code", error);
+      toast.error("Error executing code");
+    } finally {
+      setIsRunning(false);
+      setIsSubmitting(false);
     }
   };
 

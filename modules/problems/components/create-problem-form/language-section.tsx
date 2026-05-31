@@ -8,10 +8,19 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { LANGUAGES } from "../../schema";
 import { CodeEditor } from "./code-editor";
+import type {
+  Control,
+  FieldError,
+  FieldErrors,
+  UseFormRegister,
+  UseFormReturn,
+} from "react-hook-form";
+import type { ProblemFormData } from "@/modules/problems/schema";
+import type { LanguageKey } from "../../types";
 
 
 
-export function LanguageSections({ form }: { form: any }) {
+export function LanguageSections({ form }: { form: UseFormReturn<ProblemFormData> }) {
   return (
     <>
       {LANGUAGES.map((language) => (
@@ -21,7 +30,13 @@ export function LanguageSections({ form }: { form: any }) {
   );
 }
 
-function LanguageCard({ language, form }: { language: string; form: any }) {
+function LanguageCard({
+  language,
+  form,
+}: {
+  language: LanguageKey;
+  form: UseFormReturn<ProblemFormData>;
+}) {
   const {
     control,
     register,
@@ -57,7 +72,15 @@ function LanguageCard({ language, form }: { language: string; form: any }) {
   );
 }
 
-function StarterCodeEditor({ language, control, error }: { language: string; control: any; error: any }) {
+function StarterCodeEditor({
+  language,
+  control,
+  error,
+}: {
+  language: LanguageKey;
+  control: Control<ProblemFormData>;
+  error?: FieldError;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -65,7 +88,7 @@ function StarterCodeEditor({ language, control, error }: { language: string; con
       </CardHeader>
       <CardContent>
         <Controller
-          name={`codeSnippets.${language}`}
+          name={`codeSnippets.${language}` as const}
           control={control}
           render={({ field }) => (
             <CodeEditor
@@ -83,7 +106,15 @@ function StarterCodeEditor({ language, control, error }: { language: string; con
   );
 }
 
-function ReferenceSolutionEditor({ language, control, error }: { language: string; control: any; error: any }) {
+function ReferenceSolutionEditor({
+  language,
+  control,
+  error,
+}: {
+  language: LanguageKey;
+  control: Control<ProblemFormData>;
+  error?: FieldError;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -94,7 +125,7 @@ function ReferenceSolutionEditor({ language, control, error }: { language: strin
       </CardHeader>
       <CardContent>
         <Controller
-          name={`referenceSolutions.${language}`}
+          name={`referenceSolutions.${language}` as const}
           control={control}
           render={({ field }) => (
             <CodeEditor
@@ -112,7 +143,15 @@ function ReferenceSolutionEditor({ language, control, error }: { language: strin
   );
 }
 
-function ExampleFields({ language, register, errors }: { language: string; register: any; errors: any }) {
+function ExampleFields({
+  language,
+  register,
+  errors,
+}: {
+  language: LanguageKey;
+  register: UseFormRegister<ProblemFormData>;
+  errors: FieldErrors<ProblemFormData>;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -123,7 +162,7 @@ function ExampleFields({ language, register, errors }: { language: string; regis
           <div>
             <Label className="font-medium">Input</Label>
             <Textarea
-              {...register(`examples.${language}.input`)}
+              {...register(`examples.${language}.input` as const)}
               placeholder="Example input"
               className="mt-2 min-h-20 resize-y font-mono"
             />
@@ -136,7 +175,7 @@ function ExampleFields({ language, register, errors }: { language: string; regis
           <div>
             <Label className="font-medium">Output</Label>
             <Textarea
-              {...register(`examples.${language}.output`)}
+              {...register(`examples.${language}.output` as const)}
               placeholder="Example output"
               className="mt-2 min-h-20 resize-y font-mono"
             />
@@ -149,7 +188,7 @@ function ExampleFields({ language, register, errors }: { language: string; regis
           <div className="md:col-span-2">
             <Label className="font-medium">Explanation</Label>
             <Textarea
-              {...register(`examples.${language}.explanation`)}
+              {...register(`examples.${language}.explanation` as const)}
               placeholder="Explain the example"
               className="mt-2 min-h-24 resize-y"
             />

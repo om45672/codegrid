@@ -1,9 +1,63 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle2, XCircle, Clock, Cpu, Code, Calendar } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, Code, Cpu, XCircle } from "lucide-react";
+import type { ProfileSubmission } from "../types";
 
-export const SubmissionHistory = ({ submissions = [] }) => {
+const parseMetricAverage = (
+  value: string | null,
+  unitToRemove = "",
+): number | null => {
+  if (!value) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+
+    const numbers = parsed
+      .map((entry) => Number.parseFloat(String(entry).replace(unitToRemove, "")))
+      .filter(Number.isFinite);
+
+    return numbers.length
+      ? numbers.reduce((sum, entry) => sum + entry, 0) / numbers.length
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const formatMemory = (memory: string | null) => {
+  const averageMemory = parseMetricAverage(memory);
+  return averageMemory === null ? "N/A" : `${averageMemory.toFixed(2)} KB`;
+};
+
+const formatTime = (time: string | null) => {
+  const averageTime = parseMetricAverage(time, " s");
+  return averageTime === null ? "N/A" : `${averageTime.toFixed(3)} s`;
+};
+
+const formatDate = (date: Date | string) => {
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+export const SubmissionHistory = ({
+  submissions = [],
+}: {
+  submissions?: ProfileSubmission[];
+}) => {
   if (!submissions.length) {
     return (
       <Card className="w-full">
@@ -14,40 +68,6 @@ export const SubmissionHistory = ({ submissions = [] }) => {
       </Card>
     );
   }
-
-  const formatMemory = (memory) => {
-    if (!memory) return 'N/A';
-    try {
-      const memoryArray = JSON.parse(memory);
-      const avgMemory = memoryArray.reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / memoryArray.length;
-      return `${avgMemory.toFixed(2)} KB`;
-    } catch {
-      return 'N/A';
-    }
-  };
-
-  const formatTime = (time) => {
-    if (!time) return 'N/A';
-    try {
-      const timeArray = JSON.parse(time);
-      const avgTime = timeArray
-        .map(t => parseFloat(t.replace(" s", "")))
-        .reduce((a, b) => a + b, 0) / timeArray.length;
-      return `${avgTime.toFixed(3)} s`;
-    } catch {
-      return 'N/A';
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   return (
     <Card className="w-full">
@@ -60,8 +80,8 @@ export const SubmissionHistory = ({ submissions = [] }) => {
           <div className="space-y-3">
             {submissions.map((submission) => (
               <Card key={submission.id} className="bg-muted/50">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-center justify-between mb-3">
+                <CardContent className="pb-4 pt-4">
+                  <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {submission.status === "Accepted" ? (
                         <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">
@@ -85,22 +105,32 @@ export const SubmissionHistory = ({ submissions = [] }) => {
                     <div className="flex items-center gap-2">
                       <Code className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground">Language</p>
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Language
+                        </p>
                         <p className="text-sm font-medium">{submission.language}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Cpu className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground">Memory</p>
-                        <p className="text-sm font-medium">{formatMemory(submission.memory)}</p>
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Memory
+                        </p>
+                        <p className="text-sm font-medium">
+                          {formatMemory(submission.memory)}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground">Time</p>
-                        <p className="text-sm font-medium">{formatTime(submission.time)}</p>
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Time
+                        </p>
+                        <p className="text-sm font-medium">
+                          {formatTime(submission.time)}
+                        </p>
                       </div>
                     </div>
                   </div>

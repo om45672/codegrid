@@ -11,7 +11,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DIFFICULTIES } from "../constant";
+import type { DifficultyFilter } from "../types";
 
+type ProblemsFiltersProps = {
+  search: string;
+  onSearchChange: (value: string) => void;
+  difficulty: DifficultyFilter;
+  onDifficultyChange: (value: DifficultyFilter) => void;
+  selectedTag: string;
+  onTagChange: (value: string) => void;
+  allTags?: string[];
+};
+
+type TextSelectProps<TValue extends string> = {
+  value: TValue;
+  onChange: (value: TValue) => void;
+};
 
 /**
  * Filters section with search, difficulty, and tag dropdowns
@@ -24,7 +39,7 @@ export function ProblemsFilters({
   selectedTag,
   onTagChange,
   allTags = [],
-}:any) {
+}: ProblemsFiltersProps) {
   return (
     <Card>
       <CardHeader>
@@ -61,7 +76,7 @@ export function ProblemsFilters({
 /**
  * Search input with icon
  */
-function SearchInput({ value, onChange }) {
+function SearchInput({ value, onChange }: TextSelectProps<string>) {
   return (
     <div className="relative">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -78,9 +93,12 @@ function SearchInput({ value, onChange }) {
 /**
  * Difficulty filter dropdown
  */
-function DifficultySelect({ value, onChange }) {
+function DifficultySelect({ value, onChange }: TextSelectProps<DifficultyFilter>) {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select
+      value={value}
+      onValueChange={(nextValue) => onChange(nextValue as DifficultyFilter)}
+    >
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Select difficulty" />
       </SelectTrigger>
@@ -99,7 +117,11 @@ function DifficultySelect({ value, onChange }) {
 /**
  * Tag filter dropdown
  */
-function TagSelect({ value, onChange, tags }) {
+function TagSelect({
+  value,
+  onChange,
+  tags,
+}: TextSelectProps<string> & { tags: string[] }) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-[180px]">

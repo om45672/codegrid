@@ -5,8 +5,9 @@ import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { getDifficultyColor } from "../constant";
+import type { ProblemData } from "../types";
 
-export function ProblemHeader({ problem }: any) {
+export function ProblemHeader({ problem }: { problem: ProblemData }) {
   return (
     <div className="mb-6 flex items-start justify-between">
       <div>
@@ -23,11 +24,11 @@ export function ProblemHeader({ problem }: any) {
               getDifficultyColor(problem?.difficulty),
             )}
           >
-            {problem?.difficulty}
+            {problem.difficulty}
           </Badge>
         </div>
         <div className="flex flex-wrap gap-2">
-          {problem?.tags.map((tag:string) => (
+          {problem.tags.map((tag) => (
             <Badge key={tag} variant="outline" className="text-sm">
               {tag}
             </Badge>

@@ -2,6 +2,11 @@ import { prisma } from "@/lib/db";
 import { getCurrentUserData } from "@/modules/auth/actions";
 import { NextRequest, NextResponse } from "next/server";
 
+type AddProblemToPlaylistRequest = {
+  problemId?: string;
+  playlistId?: string;
+};
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUserData();
@@ -13,7 +18,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { problemId, playlistId } = await request.json();
+    const { problemId, playlistId } =
+      (await request.json()) as AddProblemToPlaylistRequest;
 
     if (!problemId || !playlistId) {
       return NextResponse.json(
@@ -28,7 +34,7 @@ export async function POST(request: NextRequest) {
     const playlist = await prisma.playlist.findFirst({
       where: {
         id: playlistId,
-        userId: user?.id,
+        userId: user.id,
       },
     });
 

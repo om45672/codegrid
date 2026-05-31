@@ -1,6 +1,9 @@
 "use server"
+import type { UserRole } from "@/lib/generated/prisma/enums"
 import { prisma } from "@/lib/db"
 import {currentUser} from "@clerk/nextjs/server"
+import type { CurrentUserData } from "@/modules/problems/types"
+import { unstable_rethrow } from "next/navigation"
 
 export const onBoardUser = async () => {
     try {
@@ -57,19 +60,17 @@ export const onBoardUser = async () => {
             })
         }
     } catch (error) {
+        unstable_rethrow(error)
         console.error("Error onboarding user:", error)
         throw new Error("Failed to onboard user")
     }
 }
 
-export const currentUserRole = async () => { 
+export const currentUserRole = async (): Promise<UserRole | null> => { 
     try {
         const user = await currentUser();
         if(!user) {
-            return {
-                success: false,
-                error: "User not authenticated"
-            }
+            return null
         }
         const { id } = user;
         const userRole = await prisma.user.findUnique({
@@ -80,21 +81,19 @@ export const currentUserRole = async () => {
                 role: true
             }
         });
-        return userRole?.role;
+        return userRole?.role ?? null;
     } catch (error) {
+        unstable_rethrow(error)
         console.error("Error fetching user role:", error)
         throw new Error("Failed to fetch user role")
     }
 }
 
-export const getCurrentUserData = async () => {
+export const getCurrentUserData = async (): Promise<CurrentUserData | null> => {
     try {
         const user = await currentUser();
         if(!user) {
-            return {
-                success: false,
-                error: "User not authenticated"
-            }
+            return null
         }
         const { id} = user;
         const data = await prisma.user.findUnique({
@@ -107,8 +106,9 @@ export const getCurrentUserData = async () => {
                 playlists: true
             }
         });
-        return data;
+        return data as CurrentUserData | null;
     } catch (error) {
+        unstable_rethrow(error)
         console.error("Error fetching current user data:", error)
         throw new Error("Failed to fetch current user data")
     }

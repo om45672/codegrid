@@ -1,18 +1,39 @@
 "use server";
+
 import { prisma } from "@/lib/db";
-import { UserRole } from "@/lib/generated/prisma/enums";
-import { getLanguageName, pollBatchResults, submitBatch } from "@/lib/judge0";
+import {
+  getLanguageName,
+  pollBatchResults,
+  submitBatch,
+  type Judge0LanguageId,
+  type Judge0Submission,
+} from "@/lib/judge0";
 import { getCurrentUserData } from "@/modules/auth/actions";
-import { currentUser } from "@clerk/nextjs/server";
-import { success } from "zod";
+import type {
+  ExecuteCodeResult,
+  ProblemData,
+  ProblemWithSolvedBy,
+  ProfileSubmission,
+} from "../types";
+import { toProblemData, toProblemWithSolvedBy } from "../types";
 
-export const getAllProblems = async () => {
+type ProblemsResult =
+  | { success: true; data: ProblemWithSolvedBy[] }
+  | { success: false; error: string };
+
+type ProblemResult =
+  | { success: true; data: ProblemData | null }
+  | { success: false; error: string };
+
+type SubmissionsResult =
+  | { success: true; data: ProfileSubmission[] }
+  | { success: false; error: string };
+
+export const getAllProblems = async (): Promise<ProblemsResult> => {
   try {
-    const user = await getCurrentUserData();
-
     const problems = await prisma.problem.findMany({
-      include:{
-        solvedBy:true
+      include: {
+        solvedBy: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -21,70 +42,70 @@ export const getAllProblems = async () => {
 
     return {
       success: true,
-      data: problems,
+      data: problems.map(toProblemWithSolvedBy),
     };
   } catch (error) {
-    console.error("❌ Error fetching problems:", error);
+    console.error("Error fetching problems:", error);
     return { success: false, error: "Failed to fetch problems" };
   }
 };
 
-export const getProblemById = async (id: string) => {
+export const getProblemById = async (id: string): Promise<ProblemResult> => {
   try {
     const problem = await prisma.problem.findUnique({
       where: {
-        id: id,
+        id,
       },
     });
 
     return {
       success: true,
-      data: problem,
+      data: problem ? toProblemData(problem) : null,
     };
   } catch (error) {
-    console.error("❌ Error fetching problem:", error);
+    console.error("Error fetching problem:", error);
     return { success: false, error: "Failed to fetch problem" };
   }
 };
 
 export const executeCode = async (
-  source_code,
-  language_id,
-  stdin,
-  expected_outputs,
-  id,
-) => {
+  sourceCode: string,
+  languageId: Judge0LanguageId,
+  stdin: string[],
+  expectedOutputs: string[],
+  id: string,
+): Promise<ExecuteCodeResult> => {
   const user = await getCurrentUserData();
 
+  if (!user) {
+    return { success: false, error: "User not authenticated" };
+  }
+
   if (
-    !Array.isArray(stdin) ||
     stdin.length === 0 ||
-    !Array.isArray(expected_outputs) ||
-    expected_outputs.length !== stdin.length
+    expectedOutputs.length !== stdin.length
   ) {
     return { success: false, error: "Invalid Test Cases" };
   }
 
-  const submissions = stdin.map((input) => ({
-    source_code,
-    language_id,
+  const submissions: Judge0Submission[] = stdin.map((input) => ({
+    source_code: sourceCode,
+    language_id: languageId,
     stdin: input,
     base64_encoded: false,
     wait: false,
   }));
 
   const submitResponse = await submitBatch(submissions);
-
   const tokens = submitResponse.map((res) => res.token);
-
   const results = await pollBatchResults(tokens);
 
   let allPassed = true;
 
   const detailedResults = results.map((result, i) => {
     const stdout = result.stdout?.trim() || null;
-    const expected_output = expected_outputs[i]?.trim();
-    const passed = stdout === expected_output;
+    const expectedOutput = expectedOutputs[i]?.trim() ?? "";
+    const passed = stdout === expectedOutput;
 
     if (!passed) allPassed = false;
 
@@ -92,28 +113,28 @@ export const executeCode = async (
       testCase: i + 1,
       passed,
       stdout,
-      expected: expected_output,
+      expected: expectedOutput,
       stderr: result.stderr || null,
-      compile_output: result.compile_output || null,
+      compileOutput: result.compile_output || null,
       status: result.status.description,
-      memory: result.memory ? `${result.memory} KB` : undefined,
-      time: result.time ? `${result.time} s` : undefined,
+      memory: result.memory ? `${result.memory} KB` : null,
+      time: result.time ? `${result.time} s` : null,
     };
   });
 
   const submission = await prisma.submission.create({
     data: {
-      userId: user?.id,
+      userId: user.id,
       problemId: id,
-      sourceCode: source_code,
-      language: getLanguageName(language_id),
+      sourceCode,
+      language: getLanguageName(languageId),
       stdin: stdin.join("\n"),
       stdout: JSON.stringify(detailedResults.map((r) => r.stdout)),
       stderr: detailedResults.some((r) => r.stderr)
         ? JSON.stringify(detailedResults.map((r) => r.stderr))
         : null,
-      compileOutput: detailedResults.some((r) => r.compile_output)
-        ? JSON.stringify(detailedResults.map((r) => r.compile_output))
+      compileOutput: detailedResults.some((r) => r.compileOutput)
+        ? JSON.stringify(detailedResults.map((r) => r.compileOutput))
         : null,
       status: allPassed ? "Accepted" : "Wrong Answer",
       memory: detailedResults.some((r) => r.memory)
@@ -128,12 +149,11 @@ export const executeCode = async (
   if (allPassed) {
     await prisma.problemSolved.upsert({
       where: {
-        userId_problemId: { userId: user?.id, problemId: id },
+        userId_problemId: { userId: user.id, problemId: id },
       },
-
       update: {},
       create: {
-        userId: user?.id,
+        userId: user.id,
         problemId: id,
       },
     });
@@ -146,7 +166,7 @@ export const executeCode = async (
     stdout: result.stdout,
     expected: result.expected,
     stderr: result.stderr,
-    compileOutput: result.compile_output,
+    compileOutput: result.compileOutput,
     status: result.status,
     memory: result.memory,
     time: result.time,
@@ -154,7 +174,7 @@ export const executeCode = async (
 
   await prisma.testCaseResult.createMany({ data: testCaseResults });
 
-  const submissionWithTestCases = await prisma.submission.findUnique({
+  const submissionWithTestCases = await prisma.submission.findUniqueOrThrow({
     where: { id: submission.id },
     include: {
       testCases: true,
@@ -169,13 +189,17 @@ export const executeCode = async (
 
 export const getAllSubmissionByCurrentUserForProblem = async (
   problemId: string,
-) => {
+): Promise<SubmissionsResult> => {
   const user = await getCurrentUserData();
+
+  if (!user) {
+    return { success: false, error: "User not authenticated" };
+  }
 
   const submissions = await prisma.submission.findMany({
     where: {
-      problemId: problemId,
-      userId: user?.id,
+      problemId,
+      userId: user.id,
     },
   });
 

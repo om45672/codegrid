@@ -1,8 +1,9 @@
 import { getProblemById } from "@/modules/problems/actions";
+import type { ProblemData } from "@/modules/problems/types";
 import { useEffect, useState } from "react"
 
 export const useProblem = (id: string) => {
-    const [problem, setProblem] = useState(null);
+    const [problem, setProblem] = useState<ProblemData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -11,7 +12,6 @@ export const useProblem = (id: string) => {
                 setIsLoading(true);
                 const problemData = await getProblemById(id);
                 if (problemData.success) {
-                    // @ts-expect-error ignore
                     setProblem(problemData.data)
                 }
             } catch (error) {

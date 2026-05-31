@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import React from "react";
+import type { ProblemTestCase } from "../types";
 
-const TestCasesPanel = ({ testCases }: any) => {
+const TestCasesPanel = ({ testCases }: { testCases: ProblemTestCase[] }) => {
   if (!testCases || testCases.length === 0) {
     return null;
   }
@@ -16,7 +17,7 @@ const TestCasesPanel = ({ testCases }: any) => {
       <CardContent>
         <ScrollArea className="h-48">
           <div className="space-y-4">
-            {testCases.map((testCase:any, index:any) => (
+            {testCases.map((testCase, index) => (
               <TestCaseItem key={index} testCase={testCase} index={index} />
             ))}
           </div>
@@ -27,7 +28,13 @@ const TestCasesPanel = ({ testCases }: any) => {
 };
 
 
-function TestCaseItem({ testCase, index }:any) {
+function TestCaseItem({
+  testCase,
+  index,
+}: {
+  testCase: ProblemTestCase;
+  index: number;
+}) {
   return (
     <div className="border rounded-lg p-3">
       <div className="text-sm font-medium mb-2">Test Case {index + 1}</div>

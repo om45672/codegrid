@@ -1,18 +1,41 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, CpuIcon, Code, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CheckCircle2, Clock, Code, CpuIcon, XCircle } from "lucide-react";
+import type { SubmissionWithTestCases } from "../types";
 
-export const SubmissionDetails = ({ submission }:any) => {
+const parseMetricValues = (value: string | null): number[] => {
+  if (!value) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((entry) => Number.parseFloat(String(entry).replace(" s", "")))
+      .filter(Number.isFinite);
+  } catch {
+    return [];
+  }
+};
+
+const getAverage = (values: number[]) =>
+  values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+
+export const SubmissionDetails = ({
+  submission,
+}: {
+  submission: SubmissionWithTestCases;
+}) => {
   const isSuccess = submission.status === "Accepted";
-  const averageMemory = submission.memory ? 
-    JSON.parse(submission.memory).reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / 
-    JSON.parse(submission.memory).length : 0;
-    
-  const averageTime = submission.time ? 
-    JSON.parse(submission.time)
-      .map(t => parseFloat(t.replace(" s", "")))
-      .reduce((a, b) => a + b, 0) / 
-    JSON.parse(submission.time).length : 0;
+  const averageMemory = getAverage(parseMetricValues(submission.memory));
+  const averageTime = getAverage(parseMetricValues(submission.time));
 
   return (
     <Card className="w-full">
@@ -36,7 +59,7 @@ export const SubmissionDetails = ({ submission }:any) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="flex items-center gap-2">
             <Code className="h-4 w-4 text-muted-foreground" />
             <div>
@@ -48,14 +71,18 @@ export const SubmissionDetails = ({ submission }:any) => {
             <CpuIcon className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-sm font-medium">Memory (avg)</p>
-              <p className="text-sm text-muted-foreground">{averageMemory.toFixed(2)} KB</p>
+              <p className="text-sm text-muted-foreground">
+                {averageMemory.toFixed(2)} KB
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-sm font-medium">Time (avg)</p>
-              <p className="text-sm text-muted-foreground">{averageTime.toFixed(3)} s</p>
+              <p className="text-sm text-muted-foreground">
+                {averageTime.toFixed(3)} s
+              </p>
             </div>
           </div>
         </div>

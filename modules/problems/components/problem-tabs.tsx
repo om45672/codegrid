@@ -4,8 +4,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, FileText, Lightbulb } from 'lucide-react';
 import { SubmissionHistory } from './sumbit-history';
+import type { ProblemData, ProfileSubmission } from '../types';
 
-export const ProblemTabs = ({problem , submissionHistory}:any) => {
+type ProblemTabsProps = {
+  problem: ProblemData;
+  submissionHistory: ProfileSubmission[];
+};
+
+export const ProblemTabs = ({problem , submissionHistory}: ProblemTabsProps) => {
   return (
      <Card>
       <CardContent className="p-3">

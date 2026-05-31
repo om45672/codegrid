@@ -22,9 +22,19 @@ const playlistSchema = z.object({
   description: z.string().max(500, "Description is too long").optional(),
 });
 
-const CreatePlaylistModal = ({ isOpen, onClose, onSubmit }: any) => {
+type CreatePlaylistValues = z.infer<typeof playlistSchema>;
 
-  console.log(isOpen)
+type CreatePlaylistModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (values: CreatePlaylistValues) => Promise<boolean>;
+};
+
+const CreatePlaylistModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+}: CreatePlaylistModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -32,11 +42,11 @@ const CreatePlaylistModal = ({ isOpen, onClose, onSubmit }: any) => {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({
+  } = useForm<CreatePlaylistValues>({
     resolver: zodResolver(playlistSchema),
   });
 
-  const handleFormSubmit = async (value: z.infer<typeof playlistSchema>) => {
+  const handleFormSubmit = async (value: CreatePlaylistValues) => {
     try {
         setIsLoading(true);
         await onSubmit(value);
@@ -52,7 +62,7 @@ const CreatePlaylistModal = ({ isOpen, onClose, onSubmit }: any) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Playlist</DialogTitle>

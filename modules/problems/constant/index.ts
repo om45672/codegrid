@@ -1,4 +1,7 @@
-export const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
+import type { Difficulty } from "@/lib/generated/prisma/enums";
+import type { EditorProps } from "@monaco-editor/react";
+
+export const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"] as const satisfies readonly Difficulty[];
 export const ITEMS_PER_PAGE = 5;
 
 export const DEFAULT_FILTERS = {
@@ -11,10 +14,10 @@ export const DIFFICULTY_COLORS = {
   EASY: "bg-green-100 text-green-800 hover:bg-green-100",
   MEDIUM: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
   HARD: "bg-red-100 text-red-800 hover:bg-red-100",
-};
+} satisfies Record<Difficulty, string>;
 
-export const getDifficultyColor = (difficulty: keyof typeof DIFFICULTY_COLORS) => {
-  return DIFFICULTY_COLORS[difficulty] || "";
+export const getDifficultyColor = (difficulty?: Difficulty | null) => {
+  return difficulty ? DIFFICULTY_COLORS[difficulty] : "";
 };
 
 export const LANGUAGE_OPTIONS = [
@@ -37,4 +40,4 @@ export const EDITOR_OPTIONS = {
   automaticLayout: true,
   tabSize: 2,
   wordWrap: 'on',
-};
+} satisfies EditorProps["options"];

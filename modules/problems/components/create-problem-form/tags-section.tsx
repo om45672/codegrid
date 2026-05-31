@@ -4,15 +4,13 @@ import { Plus, Trash2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { problemSchema } from "@/modules/problems/schema";
-
-type ProblemFormData = z.infer<typeof problemSchema>;
+import type { UseFormRegister, UseFormReturn } from "react-hook-form";
+import type { ProblemFormData } from "@/modules/problems/schema";
+import type { TagsArrayControls } from "@/hooks/use-create-problem";
 
 interface TagsSectionProps {
   form: UseFormReturn<ProblemFormData>;
-  tagsArray: any;
+  tagsArray: TagsArrayControls;
 }
 
 export function TagsSection({ form, tagsArray }: TagsSectionProps) {
@@ -43,7 +41,7 @@ export function TagsSection({ form, tagsArray }: TagsSectionProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {fields.map((field: any, index: number) => (
+          {fields.map((field, index) => (
             <TagItem
               key={field.id}
               index={index}
@@ -63,7 +61,7 @@ export function TagsSection({ form, tagsArray }: TagsSectionProps) {
 
 interface TagItemProps {
   index: number;
-  register: any;
+  register: UseFormRegister<ProblemFormData>;
   onRemove: () => void;
   canRemove: boolean;
 }
